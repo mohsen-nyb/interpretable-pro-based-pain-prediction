@@ -486,13 +486,12 @@ if __name__ == "__main__":
     label_df = pd.read_csv('../data/format/regression/label.csv')
 
     pat_list = feature_df['record_id'].unique()
-    print(f'#patient: {len(pat_list)}')
 
     # number of splits for cross-validation
     mae_lst_seed = []
     r2_lst_seed = []
 
-    for seed in [123]:
+    for seed in [123, 321, 45, 65, 52]:
         print(f'---------------------seed: {seed}--------------')
 
         n_splits = 5
@@ -502,31 +501,25 @@ if __name__ == "__main__":
         for fold, (train_index, test_index) in enumerate(kf.split(pat_list)):
             print(f'Fold {fold + 1}/{n_splits}')
             train_pat = pat_list[train_index]
-            print(f'#train_patient: {len(train_pat)}')
             test_pat = pat_list[test_index]
-            print(f'#test_patient: {len(test_pat)}')
-            #train_pat, test_pat = train_test_split(pat_list, test_size=0.1, random_state=42)
 
             feature_train = feature_df[feature_df['record_id'].isin(train_pat)].reset_index(drop=True)
             label_train = label_df[label_df['record_id'].isin(train_pat)].reset_index(drop=True)
             feature_test = feature_df[feature_df['record_id'].isin(test_pat)].reset_index(drop=True)
             label_test = label_df[label_df['record_id'].isin(test_pat)].reset_index(drop=True)
 
-
             feature_train, feature_test = normalization_df(feature_train, feature_test, ['record_id', 'redcap_event_name'])
 
             train_X, train_Y = data_convert(feature_train, label_train)
-            print(f'#train_samples: {len(train_Y)}')
             test_X, test_Y = data_convert(feature_test, label_test)
-            print(f'#test_samples: {len(test_Y)}')
 
             params = {}
             params['input_dim'] = train_X[0][0].shape[0]
             params['output_dim'] = 1
             params['rnn_dim'] = 32
             params['lr'] = 0.001
-            params['batch_size'] = 32
-            params['epochs'] = 20
+            params['batch_size'] = 8
+            params['epochs'] = 300
             params['L2_norm'] = 0.6
             params['emb_dim'] = 32
             params['drop_out'] = 0.2
@@ -544,19 +537,21 @@ if __name__ == "__main__":
             print(buf)
             print(f'    best_mae = {best_valid_mae}, best_r2 = {best_valid_r2}')
             print('     ------------------------------------------------------')
-        mae_lst_seed.append(mae_lst)
-        r2_lst_seed.append(r2_lst)
 
+        print()
+        print(f'    avg_mae_seed:{seed} = {np.mean(np.array(mae_lst))}, std_r2_seed:{seed} = {np.std(np.array(mae_lst))}')
+        print(f'    r2_mae_seed:{seed} = {np.mean(np.array(r2_lst))}, std_r2_seed:{seed} = {np.std(np.array(r2_lst))}')
+        print()
+        mae_lst_seed.append(np.mean(np.array(mae_lst)))
+        r2_lst_seed.append(np.mean(np.array(r2_lst)))
 
     mae_arr = np.array(mae_lst_seed)
-    mean_mae_arr = np.mean(mae_arr, axis=0, keepdims=True)
+    mean_mae_arr = np.mean(mae_arr)
 
     r2_arr = np.array(r2_lst_seed)
-    mean_r2_arr = np.mean(r2_arr, axis=0, keepdims=True)
+    mean_r2_arr = np.mean(r2_arr)
 
-    data = np.concatenate([mean_mae_arr, mean_r2_arr], axis=0)
-    cross_val_results = pd.DataFrame(data=data.T, columns=['mae', 'r2'])
-    print(cross_val_results)
-    #cross_val_results.to_csv(f'../checkpoint/cross_val_results_{n_splits}_fold.csv')
+    print(f'avg mae over all seeds:{mean_mae_arr}')
+    print(f'r2 mae over all seeds:{mean_r2_arr}')
 
 
