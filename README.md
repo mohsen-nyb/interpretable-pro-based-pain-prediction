@@ -21,6 +21,13 @@ This repository contains the implementation of the model described in the paper 
   - **Feature-level attention**: Focuses on PRO items and treatment drugs.
 - **Performance Metrics:** The model is evaluated using **Mean Absolute Error (MAE)** and **R-squared (R²)** statistics, demonstrating a high level of predictive performance.
 
+## Model Architecture
+
+Below is the architecture of the Attention RNN model, showing both **Time-level Attention Scores** and **Item-level Attention Scores**:
+
+![Attention RNN Architecture](images/model.png)
+
+
 ## Results
 - **Prediction Performance**: The Attention-RNN model achieved a Mean Absolute Error (MAE) of 3.7 and an R² of 0.63 on predicting pain interference scores.
 
